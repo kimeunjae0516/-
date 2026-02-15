@@ -1,67 +1,70 @@
-# TalkThermo
+# TalkThermo v3
 
-대화 온도 체크 & 복기 코치 웹앱 MVP입니다.
+> 대화 온도 체크 & 복기 코치
 
-## 핵심 특징
-- 입력 모드 3가지: 이미지 OCR / 텍스트 복붙 / 상황 설명
-- 분석 결과: 요약, 톤 점수, 오해 포인트, 갈등 신호(가능성), 다음 메시지 3종
-- 프라이버시 우선: 기본 저장 OFF, 저장 ON 시에도 메타데이터만 로컬 저장
-- 패턴 대시보드: 톤 추세 + 갈등 태그 빈도 + 다음 액션 템플릿
+Next.js 14(App Router) 기반의 커뮤니케이션 코칭 웹앱입니다.
 
-## 기술 스택
-- Next.js 14 (App Router) + TypeScript
-- TailwindCSS + shadcn 스타일 UI 컴포넌트
-- Zustand 상태 관리
-- Recharts 차트
-- OCR: tesseract.js (클라이언트)
-- AI: OpenAI API via Route Handler
-- Validation: zod
+## 주요 기능
+- 입력 3모드: **텍스트 / 캡쳐 OCR / 음성 STT**
+- 분석 결과: 2~3문장 요약, 톤 점수(0~100), 오해 포인트 TOP3, 갈등 신호 태그, 답장 제안 3종
+- 2단계 파이프라인: **NORMALIZE → ANALYZE**
+- 패턴 대시보드: tone 추세(Line), conflict tag 빈도(Bar), 제안 스타일 분포(Pie)
+- 저장 기본 OFF + Save ON이어도 **메타데이터만 저장**
 
-## 실행 방법
-1. 의존성 설치
+## Privacy 보장
+- 기본값: 저장 OFF
+- 원문 대화 텍스트는 서버/클라이언트 어디에도 저장하지 않음
+- Save ON일 때 저장 항목: toneScore, toneLabel, conflictTags 등 메타데이터
+- 결과 내 quote/evidence는 20자 이하로 제한
+- `/privacy` 페이지에서 정책을 명시
+
+## 설치 및 실행
 ```bash
 npm install
-```
-2. 환경변수 설정
-```bash
 cp .env.example .env.local
-```
-`.env.local`:
-```bash
-OPENAI_API_KEY=your_key
-# optional
-OPENAI_MODEL=gpt-4o-mini
-```
-3. 개발 서버 실행
-```bash
 npm run dev
 ```
-4. 브라우저: `http://localhost:3000`
+
+브라우저: http://localhost:3000
+
+## 환경 변수
+`.env.local`
+```bash
+OPENAI_API_KEY=your_openai_key
+OPENAI_MODEL=gpt-4o-mini
+```
+
+## 배포 (Vercel)
+1. GitHub 저장소 연결
+2. Environment Variables에 `OPENAI_API_KEY`, `OPENAI_MODEL` 등록
+3. Deploy
+
+## STT 브라우저 지원
+- Web Speech API(`SpeechRecognition`)를 사용합니다.
+- 최신 Chrome 계열 브라우저에서 가장 안정적으로 동작합니다.
+- 미지원 브라우저에서는 안내 메시지를 표시하고 텍스트 입력으로 대체할 수 있습니다.
 
 ## API
 ### `POST /api/analyze`
-입력:
 ```json
 {
-  "mode": "ocr | paste | situation",
-  "text": "...",
+  "mode": "text|ocr|voice",
+  "language": "ko|en",
+  "rawText": "...",
   "situation": {
-    "relationship": "",
-    "goal": "",
-    "myEmotion": "",
-    "coreMessage": "",
-    "lastMessage": ""
+    "relationshipType": "친구",
+    "goal": "조율",
+    "myEmotion": "혼란",
+    "keyMessage": "...",
+    "lastMessage": "..."
   },
-  "language": "ko | en",
   "options": {
-    "relationshipType": "",
-    "goal": "",
     "saveEnabled": false,
-    "personId": ""
+    "personId": "optional"
   }
 }
 ```
 
 ## 주의
-- 본 서비스는 의료/상담 대체 서비스가 아닙니다.
-- 고위험/위기 상황은 전문가 또는 긴급 지원 체계를 이용하세요.
+- 본 서비스는 치료/진단 목적이 아닌 커뮤니케이션 코칭 도구입니다.
+- 자해/위험 표현이 감지되면 일반적인 도움 요청 안내를 우선 제공합니다.
